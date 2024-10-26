@@ -35,9 +35,8 @@ const Login = async (req, res) => {
           userName: user.userName,
           email: user.email,
           role: user.role,
-        });
-       
-        res.status(200).send({ message: "Login successfull", token });
+        });       
+        res.status(200).send({ message: "Login successfull", token: {token} });
       } else {
         res.status(400).send({ message: "Invalid Password" });
       }
