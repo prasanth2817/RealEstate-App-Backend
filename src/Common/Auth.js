@@ -15,12 +15,13 @@ const hashCompare = async (password, hash) => {
 
 const createToken = async (payload) => {
   try {
-    const token = await jwt.sign(payload, process.env.JWT_SECRECT, {
+    const token = await jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRE,
     });
-    return token; 
+    return token;
   } catch (error) {
     console.error("Error creating token:", error);
+    throw new Error("Token generation failed");
   }
 };
 
@@ -31,14 +32,14 @@ const decodeToken = async (token) => {
 
 const validate = async (req, res, next) => {
   try {
-    let token = req.headers.authorization?.split(" ")[1];
-    
+    const token = req.headers.authorization?.split(" ")[1];
+
     if (!token) {
       return res.status(401).json({ message: "No token found. Please log in." });
     }
 
-    let payload = await decodeToken(token);
-    let currentTime = Math.floor(Date.now() / 1000);  // Current time in seconds
+    const payload = await jwt.verify(token, process.env.JWT_SECRET);
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
 
     if (payload.exp > currentTime) {
       req.user = payload;
@@ -47,7 +48,6 @@ const validate = async (req, res, next) => {
       return res.status(401).json({ message: "Token expired. Please log in again." });
     }
   } catch (error) {
-    // Handle possible token decoding errors
     return res.status(401).json({ message: "Invalid token. Please log in again.", error: error.message });
   }
 };
