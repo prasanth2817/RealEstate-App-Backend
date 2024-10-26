@@ -15,40 +15,43 @@ const hashCompare = async (password, hash) => {
 
 const createToken = async (payload) => {
   try {
-    const token = await jwt.sign(payload, process.env.JWT_SECRET, {
+    const token = await jwt.sign(payload, process.env.JWT_SECRECT, {
       expiresIn: process.env.JWT_EXPIRE,
     });
     return token;
   } catch (error) {
     console.error("Error creating token:", error);
-    throw new Error("Token generation failed");
   }
 };
 
 const decodeToken = async (token) => {
-  const payload = await jwt.decode(token);
-  return payload;
+  try {
+    const payload = await jwt.verify(token, process.env.JWT_SECRECT);
+    return payload;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return null;
+  }
 };
 
 const validate = async (req, res, next) => {
-  try {
-    const token = req.headers.authorization?.split(" ")[1];
+  let token = req.headers.authorization?.split(" ")[1];
+  if (token) {
+    try {
+      let payload = await decodeToken(token);
+      let currentTime = Math.floor(Date.now() / 1000);
 
-    if (!token) {
-      return res.status(401).json({ message: "No token found. Please log in." });
+      if (payload.exp > currentTime) {
+        req.user = payload;
+        next();
+      } else {
+        res.status(400).send({ message: "Token Expired" });
+      }
+    } catch (error) {
+      res.status(400).send({ message: "Invalid Token" });
     }
-
-    const payload = await jwt.verify(token, process.env.JWT_SECRET);
-    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-
-    if (payload.exp > currentTime) {
-      req.user = payload;
-      return next();
-    } else {
-      return res.status(401).json({ message: "Token expired. Please log in again." });
-    }
-  } catch (error) {
-    return res.status(401).json({ message: "Invalid token. Please log in again.", error: error.message });
+  } else {
+    res.status(400).send({ message: "No token Found" });
   }
 };
 
