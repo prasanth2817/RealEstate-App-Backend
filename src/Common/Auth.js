@@ -55,7 +55,6 @@ const validate = async (req, res, next) => {
   }
 };
 
-
 const validateAgent = async (req, res, next) => {
   try {
     if (req.user && req.user.role === "agent") {
