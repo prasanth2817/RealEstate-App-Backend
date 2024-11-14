@@ -19,11 +19,7 @@ router.get(
   Auth.validateAgent,
   PropertyController.GetPropertyByAgentId
 );
-router.get(
-  "/:id",
-  Auth.validate,
-  PropertyController.GetPropertyById
-);
+router.get("/:id", Auth.validate, PropertyController.GetPropertyById);
 router.get("/", Auth.validate, PropertyController.GetAllProperties);
 router.put(
   "/:id",
